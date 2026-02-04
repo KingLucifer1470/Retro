@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal AI Chat Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0e27;
+            color: #e0e7ff;
+            overflow: hidden;
+        }
+
+        /* Cyberpunk Animated Background */
+        .cyber-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(125deg, #0a0e27 0%, #1a1147 50%, #0a0e27 100%);
+            z-index: -1;
+        }
+
+        .cyber-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(99, 102, 241, 0.03) 2px,
+                    rgba(99, 102, 241, 0.03) 4px
+                );
+            animation: scan 8s linear infinite;
+        }
+
+        .cyber-bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        /* Neon Glow Effects */
+        .neon-border {
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.2),
+                        inset 0 0 10px rgba(139, 92, 246, 0.1);
+        }
+
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4),
+                        0 0 40px rgba(139, 92, 246, 0.2);
+        }
+
+        .neon-text {
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.8),
+                         0 0 20px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(139, 92, 246, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-closed {
+            transform: translateX(-100%);
+        }
+
+        /* Chat Message Styles */
+        .message {
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-user {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .message-ai {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        /* Input Styles */
+        .cyber-input {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: #e0e7ff;
+            transition: all 0.3s ease;
+        }
+
+        .cyber-input:focus {
+            outline: none;
+            border-color: rgba(139, 92, 246, 0.6);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Button Styles */
+        .cyber-button {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cyber-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .cyber-button:hover::before {
+            left: 100%;
+        }
+
+        .cyber-button:hover {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .cyber-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #8b5cf6 0%, #6366f1 100%);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #a78bfa 0%, #818cf8 100%);
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(10, 14, 39, 0.95) 0%, rgba(26, 17, 71, 0.95) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0 50px rgba(139, 92, 246, 0.4);
+        }
+
+        /* History Item Styles */
+        .history-item {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .history-item:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .history-item.active {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        /* Loading Animation */
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Logo Animation */
+        .logo {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cyberpunk Background -->
+    <div class="cyber-bg"></div>
+
+    <!-- Main Container -->
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar w-64 h-full flex flex-col">
+            <!-- Logo -->
+            <div class="p-4 border-b border-purple-500/20">
+                <h1 class="text-2xl font-bold neon-text logo">⚡ AI CHAT</h1>
+            </div>
+
+            <!-- New Chat Button -->
+            <div class="p-4">
+                <button id="newChatBtn" class="w-full cyber-button text-white font-semibold py-3 px-4 rounded-lg">
+                    + New Chat
+                </button>
+            </div>
+
+            <!-- Chat History -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-2" id="chatHistory">
+                <!-- History items will be inserted here -->
+            </div>
+
+            <!-- Settings Button -->
+            <div class="p-4 border-t border-purple-500/20">
+                <button id="settingsBtn" class="w-full cyber-input py-3 px-4 rounded-lg hover:bg-purple-500/20 transition-all">
+                    ⚙️ Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <div class="p-4 border-b neon-border flex items-center justify-between">
+                <button id="toggleSidebar" class="cyber-button text-white p-2 rounded-lg md:hidden">
+                    ☰
+                </button>
+                <h2 class="text-xl font-semibold neon-text">Universal AI Assistant</h2>
+                <div class="w-10"></div> <!-- Spacer for alignment -->
+            </div>
+
+            <!-- Messages Container -->
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-4">
+                <!-- Welcome Message -->
+                <div class="text-center py-20">
+                    <div class="text-6xl mb-4 logo">🤖</div>
+                    <h2 class="text-3xl font-bold neon-text mb-2">Welcome to AI Chat</h2>
+                    <p class="text-purple-300">Start a conversation or configure your API settings</p>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 border-t neon-border">
+                <div class="max-w-4xl mx-auto flex gap-2">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Type your message here..."
+                        class="flex-1 cyber-input py-3 px-4 rounded-lg"
+                        autocomplete="off"
+                    />
+                    <button id="sendBtn" class="cyber-button text-white font-semibold py-3 px-6 rounded-lg">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4">
+        <div class="modal-content rounded-lg p-6 max-w-md w-full">
+            <h2 class="text-2xl font-bold neon-text mb-4">⚙️ Settings</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-purple-300 mb-2">OpenRouter API Key</label>
+                    <input 
+                        type="password" 
+                        id="apiKeyInput" 
+                        placeholder="Enter your API key..."
+                        class="w-full cyber-input py-2 px-4 rounded-lg"
+                    />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-purple-300 mb-2">Model Name</label>
+                    <input 
+                        type="text" 
+                        id="modelNameInput" 
+                        placeholder="e.g., anthropic/claude-3.5-sonnet"
+                        class="w-full cyber-input py-2 px-4 rounded-lg"
+                    />
+                    <p class="text-xs text-purple-400 mt-1">Default: anthropic/claude-3.5-sonnet</p>
+                </div>
+
+                <div class="flex gap-2 mt-6">
+                    <button id="saveSettingsBtn" class="flex-1 cyber-button text-white font-semibold py-2 px-4 rounded-lg">
+                        Save
+                    </button>
+                    <button id="closeSettingsBtn" class="flex-1 cyber-input py-2 px-4 rounded-lg hover:bg-purple-500/20">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // State Management
+        const state = {
+            apiKey: localStorage.getItem('apiKey') || '',
+            modelName: localStorage.getItem('modelName') || 'anthropic/claude-3.5-sonnet',
+            chats: JSON.parse(localStorage.getItem('chats') || '[]'),
+            currentChatId: null,
+            isLoading: false
+        };
+
+        // DOM Elements
+        const elements = {
+            sidebar: document.getElementById('sidebar'),
+            toggleSidebar: document.getElementById('toggleSidebar'),
+            newChatBtn: document.getElementById('newChatBtn'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            settingsModal: document.getElementById('settingsModal'),
+            closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+            saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+            apiKeyInput: document.getElementById('apiKeyInput'),
+            modelNameInput: document.getElementById('modelNameInput'),
+            messageInput: document.getElementById('messageInput'),
+            sendBtn: document.getElementById('sendBtn'),
+            messagesContainer: document.getElementById('messagesContainer'),
+            chatHistory: document.getElementById('chatHistory')
+        };
+
+        // Utility Functions
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('chats', JSON.stringify(state.chats));
+            localStorage.setItem('apiKey', state.apiKey);
+            localStorage.setItem('modelName', state.modelName);
+        }
+
+        function createChatTitle(message) {
+            return message.substring(0, 30) + (message.length > 30 ? '...' : '');
+        }
+
+        // Chat Management
+        function createNewChat() {
+            const chatId = generateId();
+            const newChat = {
+                id: chatId,
+                title: 'New Chat',
+                messages: [],
+                createdAt: new Date().toISOString()
+            };
+            state.chats.unshift(newChat);
+            state.currentChatId = chatId;
+            saveToLocalStorage();
+            renderChatHistory();
+            renderMessages();
+        }
+
+        function loadChat(chatId) {
+            state.currentChatId = chatId;
+            renderMessages();
+            renderChatHistory();
+        }
+
+        function deleteChat(chatId) {
+            state.chats = state.chats.filter(chat => chat.id !== chatId);
+            if (state.currentChatId === chatId) {
+                state.currentChatId = null;
+                renderMessages();
+            }
+            saveToLocalStorage();
+            renderChatHistory();
+        }
+
+        function getCurrentChat() {
+            return state.chats.find(chat => chat.id === state.currentChatId);
+        }
+
+        // Rendering Functions
+        function renderChatHistory() {
+            elements.chatHistory.innerHTML = '';
+            
+            state.chats.forEach(chat => {
+                const div = document.createElement('div');
+                div.className = `history-item rounded-lg p-3 ${chat.id === state.currentChatId ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm truncate flex-1">${chat.title}</span>
+                        <button class="delete-chat ml-2 text-red-400 hover:text-red-300" data-chat-id="${chat.id}">
+                            ×
+                        </button>
+                    </div>
+                `;
+                
+                div.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('delete-chat')) {
+                        loadChat(chat.id);
+                    }
+                });
+                
+                const deleteBtn = div.querySelector('.delete-chat');
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm('Delete this chat?')) {
+                        deleteChat(chat.id);
+                    }
+                });
+                
+                elements.chatHistory.appendChild(div);
+            });
+        }
+
+        function renderMessages() {
+            const currentChat = getCurrentChat();
+            
+            if (!currentChat || currentChat.messages.length === 0) {
+                elements.messagesContainer.innerHTML = `
+                    <div class="text-center py-20">
+                        <div class="text-6xl mb-4 logo">🤖</div>
+                        <h2 class="text-3xl font-bold neon-text mb-2">Welcome to AI Chat</h2>
+                        <p class="text-purple-300">Start a conversation or configure your API settings</p>
+                    </div>
+                `;
+                return;
+            }
+
+            elements.messagesContainer.innerHTML = '';
+            
+            currentChat.messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${msg.role === 'user' ? 'message-user' : 'message-ai'} rounded-lg p-4 max-w-3xl ${msg.role === 'user' ? 'ml-auto' : 'mr-auto'}`;
+                
+                const roleLabel = msg.role === 'user' ? '👤 You' : '🤖 AI';
+                messageDiv.innerHTML = `
+                    <div class="text-xs text-purple-400 mb-2 font-semibold">${roleLabel}</div>
+                    <div class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(msg.content)}</div>
+                `;
+                
+                elements.messagesContainer.appendChild(messageDiv);
+            });
+
+            elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
+        }
+
+        function showLoadingMessage() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loadingMessage';
+            loadingDiv.className = 'message message-ai rounded-lg p-4 max-w-3xl mr-auto';
+            loadingDiv.innerHTML = `
+                <div class="text-xs text-purple-400 mb-2 font-semibold">🤖 AI</div>
+                <div class="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+            elements.messagesContainer.appendChild(loadingDiv);
+            elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
+        }
+
+        function removeLoadingMessage() {
+            const loadingMsg = document.getElementById('loadingMessage');
+            if (loadingMsg) {
+                loadingMsg.remove();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // API Communication
+        async function sendMessage(message) {
+            if (!state.apiKey) {
+                alert('Please configure your API key in Settings first!');
+                elements.settingsModal.classList.remove('hidden');
+                return;
+            }
+
+            if (!state.currentChatId) {
+                createNewChat();
+            }
+
+            const currentChat = getCurrentChat();
+            
+            // Add user message
+            currentChat.messages.push({
+                role: 'user',
+                content: message
+            });
+
+            // Update chat title if it's the first message
+            if (currentChat.messages.length === 1) {
+                currentChat.title = createChatTitle(message);
+            }
+
+            saveToLocalStorage();
+            renderMessages();
+            renderChatHistory();
+            showLoadingMessage();
+
+            state.isLoading = true;
+            elements.sendBtn.disabled = true;
+            elements.messageInput.disabled = true;
+
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.apiKey}`,
+                        'HTTP-Referer': window.location.href,
+                        'X-Title': 'Universal AI Chat'
+                    },
+                    body: JSON.stringify({
+                        model: state.modelName,
+                        messages: currentChat.messages
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || 'API request failed');
+                }
+
+                const data = await response.json();
+                const aiMessage = data.choices[0].message.content;
+
+                currentChat.messages.push({
+                    role: 'assistant',
+                    content: aiMessage
+                });
+
+                saveToLocalStorage();
+                removeLoadingMessage();
+                renderMessages();
+
+            } catch (error) {
+                console.error('Error:', error);
+                removeLoadingMessage();
+                alert(`Error: ${error.message}`);
+                
+                // Remove the user message if the API call failed
+                currentChat.messages.pop();
+                saveToLocalStorage();
+                renderMessages();
+            } finally {
+                state.isLoading = false;
+                elements.sendBtn.disabled = false;
+                elements.messageInput.disabled = false;
+                elements.messageInput.focus();
+            }
+        }
+
+        // Event Listeners
+        elements.toggleSidebar.addEventListener('click', () => {
+            elements.sidebar.classList.toggle('sidebar-closed');
+        });
+
+        elements.newChatBtn.addEventListener('click', () => {
+            createNewChat();
+        });
+
+        elements.settingsBtn.addEventListener('click', () => {
+            elements.apiKeyInput.value = state.apiKey;
+            elements.modelNameInput.value = state.modelName;
+            elements.settingsModal.classList.remove('hidden');
+        });
+
+        elements.closeSettingsBtn.addEventListener('click', () => {
+            elements.settingsModal.classList.add('hidden');
+        });
+
+        elements.saveSettingsBtn.addEventListener('click', () => {
+            state.apiKey = elements.apiKeyInput.value.trim();
+            state.modelName = elements.modelNameInput.value.trim() || 'anthropic/claude-3.5-sonnet';
+            saveToLocalStorage();
+            elements.settingsModal.classList.add('hidden');
+            alert('Settings saved successfully!');
+        });
+
+        elements.sendBtn.addEventListener('click', () => {
+            const message = elements.messageInput.value.trim();
+            if (message && !state.isLoading) {
+                elements.messageInput.value = '';
+                sendMessage(message);
+            }
+        });
+
+        elements.messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey && !state.isLoading) {
+                e.preventDefault();
+                const message = elements.messageInput.value.trim();
+                if (message) {
+                    elements.messageInput.value = '';
+                    sendMessage(message);
+                }
+            }
+        });
+
+        // Close modal on backdrop click
+        elements.settingsModal.addEventListener('click', (e) => {
+            if (e.target === elements.settingsModal) {
+                elements.settingsModal.classList.add('hidden');
+            }
+        });
+
+        // Initialize
+        function init() {
+            renderChatHistory();
+            renderMessages();
+            elements.messageInput.focus();
+            
+            // Create first chat if none exist
+            if (state.chats.length === 0) {
+                createNewChat();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
